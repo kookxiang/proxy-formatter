@@ -74,6 +74,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 		} else {
 			ctx.RegisterProxy(&core.ProxyItem{
 				Name:   name,
+				Type:   proxy["type"].(string),
 				Option: option,
 			})
 		}

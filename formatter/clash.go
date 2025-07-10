@@ -22,6 +22,7 @@ func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
 	for _, proxy := range ctx.AllProxies() {
 		config := map[string]any{}
 		config["name"] = proxy.Name
+		config["type"] = proxy.Type
 		options := util.EncodeProxyStruct(proxy.Option)
 		for key, value := range options {
 			if key == "name" {
