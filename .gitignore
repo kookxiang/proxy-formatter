@@ -1,0 +1,39 @@
+# Binaries for current platform
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Binaries for other platforms
+# If you cross-compile, you might want to ignore binaries for other architectures/OS
+# For example, for Linux binaries compiled on Windows:
+# linux_amd64_binary
+
+# Test binaries
+*_test
+
+# Dependency management tools
+# If you are using go modules, these are typically stored in the module cache, not in the project itself
+# However, you might encounter vendor directories if you're using older dependency management or specific configurations
+vendor/
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build output and temporary files
+# Go build cache
+.cache/go-build/
+
+# IDE generated files
+# For example, Goland's build output directory
+out/
+
+# Log files
+*.log
+
+# Environment variables and sensitive data
+.env
+*.envrc
