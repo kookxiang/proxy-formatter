@@ -64,7 +64,9 @@ func EncodeProxyStruct(option any) map[string]any {
 				result[key] = mapResult
 			}
 		} else {
-			result[key] = fieldValue.Interface()
+			if !IsEmptyValue(fieldValue.Interface()) {
+				result[key] = fieldValue.Interface()
+			}
 		}
 	}
 	return result

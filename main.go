@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"proxy-provider/cache"
 	"proxy-provider/core"
 
 	_ "proxy-provider/action"
@@ -55,15 +56,22 @@ func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 var dir string
+var cacheDir string
 var port int
 
 func main() {
 	cwd, _ := os.Getwd()
 	flag.StringVar(&dir, "dir", cwd, "Directory to use as home directory for configuration files")
+	flag.StringVar(&cacheDir, "cache-dir", filepath.Join(os.TempDir(), "cache"), "Directory to use as cache directory for fetched data")
 	flag.IntVar(&port, "port", 8080, "Port to run the HTTP server on")
 	flag.Parse()
 
+	cache.HTTPCacheFolder = cacheDir
+	_ = os.MkdirAll(cache.HTTPCacheFolder, 0755)
+
 	http.HandleFunc("/", formulaHandler)
+	fmt.Printf("use formula from: %s\n", dir)
+	fmt.Printf("use cache folder: %s\n", cacheDir)
 	fmt.Printf("server started at http://0.0.0.0:%d\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {

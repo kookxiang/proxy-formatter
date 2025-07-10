@@ -36,49 +36,28 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	fetchLock.Lock()
 	defer fetchLock.Unlock()
 
-	item := cache.GetResponseCache(action.URL)
-	if item == nil {
-		urlObj, err := url.Parse(action.URL)
-		if err != nil {
+	body, header, needRefresh := cache.LoadResponse(action.URL)
+	if body == nil || len(body) == 0 || needRefresh {
+		var err error
+		body, header, err = action.doFetch()
+		if err != nil && needRefresh {
+			fmt.Println("refreshing cache for url", action.URL, "failed:", err)
+		} else if err != nil {
 			return err
+		} else {
+			cache.SaveResponse(action.URL, body, header)
 		}
-		request := &http.Request{
-			Method: http.MethodGet,
-			URL:    urlObj,
-			Header: http.Header{
-				"User-Agent": []string{"clash.meta/1.19.11"},
-			},
-		}
-		response, err := http.DefaultClient.Do(request)
-		if err != nil {
-			return err
-		}
-		defer response.Body.Close()
-		if response.StatusCode != http.StatusOK {
-			return errors.New(fmt.Sprintf("failed to fetch URL %s, status code: %d", action.URL, response.StatusCode))
-		}
-
-		responseBody, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-
-		item = &cache.ResponseCacheItem{
-			Data:      responseBody,
-			UsageInfo: response.Header.Get("subscription-userinfo"),
-		}
-		cache.SetResponseCache(action.URL, item)
 	}
 
-	if item.UsageInfo != "" {
-		ctx.WriteHeader("Subscription-Userinfo", item.UsageInfo)
+	if header.Get("Subscription-Userinfo") != "" {
+		ctx.WriteHeader("Subscription-Userinfo", header.Get("Subscription-Userinfo"))
 	}
 
 	schema := &provider.ProxySchema{}
 	// try yaml first
-	if err := yaml.Unmarshal(item.Data, schema); err != nil {
+	if err := yaml.Unmarshal(body, schema); err != nil {
 		// when failed, try to parse as base64 encoded list
-		proxies, err := convert.ConvertsV2Ray(item.Data)
+		proxies, err := convert.ConvertsV2Ray(body)
 		if err != nil {
 			return err
 		}
@@ -101,6 +80,34 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	}
 
 	return nil
+}
+
+func (action *FetchAction) doFetch() ([]byte, http.Header, error) {
+	urlObj, err := url.Parse(action.URL)
+	if err != nil {
+		return nil, nil, err
+	}
+	request := &http.Request{
+		Method: http.MethodGet,
+		URL:    urlObj,
+		Header: http.Header{
+			"User-Agent": []string{"clash.meta/1.19.11"},
+		},
+	}
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return nil, nil, errors.New(fmt.Sprintf("failed to fetch URL %s, status code: %d", action.URL, response.StatusCode))
+	}
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	return body, response.Header, nil
 }
 
 func (action *FetchAction) Hash() string {
