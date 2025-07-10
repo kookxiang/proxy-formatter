@@ -47,15 +47,22 @@ func EncodeProxyStruct(option any) map[string]any {
 					slice[j] = item.Interface()
 				}
 			}
-			result[key] = slice
+			if len(slice) > 0 {
+				result[key] = slice
+			}
 		} else if fieldValue.Kind() == reflect.Map {
 			mapResult := make(map[string]any)
 			for _, mapKey := range fieldValue.MapKeys() {
 				mapResult[mapKey.String()] = fieldValue.MapIndex(mapKey).Interface()
 			}
-			result[key] = mapResult
+			if !IsEmptyValue(mapResult) {
+				result[key] = mapResult
+			}
 		} else if fieldValue.Kind() == reflect.Struct {
-			result[key] = EncodeProxyStruct(fieldValue.Interface())
+			mapResult := EncodeProxyStruct(fieldValue.Interface())
+			if !IsEmptyValue(mapResult) {
+				result[key] = mapResult
+			}
 		} else {
 			result[key] = fieldValue.Interface()
 		}
