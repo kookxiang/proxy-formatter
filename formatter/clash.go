@@ -42,7 +42,7 @@ func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
 	encoder := yaml.NewEncoder(&buffer)
 	defer encoder.Close()
 	encoder.SetIndent(2)
-	err := encoder.Encode(map[string]any{"items": proxies})
+	err := encoder.Encode(map[string]any{"proxies": proxies})
 	ctx.Write(buffer.String())
 	return err
 }
