@@ -3,11 +3,12 @@ package action
 import (
 	"context"
 	"errors"
-	"github.com/metacubex/mihomo/adapter/outbound"
 	"net"
 	"proxy-provider/cache"
 	"proxy-provider/core"
 	"time"
+
+	"github.com/metacubex/mihomo/adapter/outbound"
 )
 
 func init() {

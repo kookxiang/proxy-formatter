@@ -39,7 +39,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	body, header, needRefresh := cache.LoadResponse(action.URL)
 	if body == nil || len(body) == 0 || needRefresh {
 		var err error
-		body, header, err = action.doFetch()
+		body, header, err = action.doFetch(ctx)
 		if err != nil && needRefresh {
 			fmt.Println("refreshing cache for url", action.URL, "failed:", err)
 		} else if err != nil {
@@ -49,8 +49,8 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 		}
 	}
 
-	if header.Get("Subscription-Userinfo") != "" {
-		ctx.WriteHeader("Subscription-Userinfo", header.Get("Subscription-Userinfo"))
+	if info := header.Get("Subscription-Userinfo"); info != "" {
+		ctx.ResHeader.Set("Subscription-Userinfo", info)
 	}
 
 	schema := &provider.ProxySchema{}
@@ -83,7 +83,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	return nil
 }
 
-func (action *FetchAction) doFetch() ([]byte, http.Header, error) {
+func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Header, error) {
 	urlObj, err := url.Parse(action.URL)
 	if err != nil {
 		return nil, nil, err
@@ -91,9 +91,7 @@ func (action *FetchAction) doFetch() ([]byte, http.Header, error) {
 	request := &http.Request{
 		Method: http.MethodGet,
 		URL:    urlObj,
-		Header: http.Header{
-			"User-Agent": []string{"clash.meta/1.19.11"},
-		},
+		Header: ctx.ReqHeader,
 	}
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

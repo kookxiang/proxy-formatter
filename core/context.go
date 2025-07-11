@@ -1,26 +1,24 @@
 package core
 
 import (
-	"context"
 	"net/http"
 )
 
 type ExecuteContext struct {
-	context context.Context
-	items   []*ProxyItem
-	output  string
-	header  map[string]string
-	Cancel  *context.CancelFunc
+	items     []*ProxyItem
+	output    string
+	ReqHeader http.Header
+	ResHeader http.Header
 }
 
 func NewExecuteContext() *ExecuteContext {
-	ctx, cancel := context.WithCancel(context.Background())
-	return &ExecuteContext{
-		context: ctx,
-		items:   []*ProxyItem{},
-		header:  map[string]string{},
-		Cancel:  &cancel,
+	ctx := &ExecuteContext{
+		items:     []*ProxyItem{},
+		ReqHeader: http.Header{},
+		ResHeader: http.Header{},
 	}
+	ctx.ReqHeader.Set("User-Agent", "clash.meta/1.19.11")
+	return ctx
 }
 
 func (ctx *ExecuteContext) RegisterProxy(proxy *ProxyItem) {
@@ -51,21 +49,15 @@ func (ctx *ExecuteContext) AllProxies() []*ProxyItem {
 	return ctx.items
 }
 
-func (ctx *ExecuteContext) SetContentType(contentType string) {
-	ctx.WriteHeader("Content-Type", contentType)
-}
-
 func (ctx *ExecuteContext) Write(input string) {
 	ctx.output += input
 }
 
-func (ctx *ExecuteContext) WriteHeader(key, value string) {
-	ctx.header[key] = value
-}
-
 func (ctx *ExecuteContext) Pipe(writer http.ResponseWriter) error {
-	for key, value := range ctx.header {
-		writer.Header().Set(key, value)
+	for key, values := range ctx.ResHeader {
+		for _, value := range values {
+			writer.Header().Add(key, value)
+		}
 	}
 	_, err := writer.Write([]byte(ctx.output))
 	return err

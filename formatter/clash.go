@@ -17,7 +17,7 @@ func init() {
 type ClashFormatter struct{}
 
 func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
-	ctx.SetContentType("text/yaml; charset=utf-8")
+	ctx.ResHeader.Set("Content-Type", "text/yaml; charset=utf-8")
 	proxies := make([]map[string]any, 0, len(ctx.AllProxies()))
 	for _, proxy := range ctx.AllProxies() {
 		config := map[string]any{}
