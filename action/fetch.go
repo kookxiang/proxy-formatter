@@ -93,7 +93,17 @@ func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Heade
 		URL:    urlObj,
 		Header: ctx.ReqHeader,
 	}
-	response, err := http.DefaultClient.Do(request)
+	client := &http.Client{}
+	if ctx.Proxy != "" {
+		proxy, err := url.Parse(ctx.Proxy)
+		if err != nil {
+			return nil, nil, errors.New(fmt.Sprintf("invalid proxy URL %s: %v", ctx.Proxy, err))
+		}
+		client.Transport = &http.Transport{
+			Proxy: http.ProxyURL(proxy),
+		}
+	}
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, nil, err
 	}

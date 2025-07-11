@@ -7,6 +7,7 @@ import (
 type ExecuteContext struct {
 	items     []*ProxyItem
 	output    string
+	Proxy     string
 	ReqHeader http.Header
 	ResHeader http.Header
 }
