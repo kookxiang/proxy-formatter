@@ -83,6 +83,9 @@ func (s *FormulaScanner) ScanAction() (Action, error) {
 		} else if char == '\n' {
 			params = append(params, buf.String())
 			return CreateAction(params)
+		} else if char == '#' && buf.Len() == 0 {
+			s.ScanLineComment()
+			continue
 		} else if char == ' ' {
 			params = append(params, buf.String())
 			for s.Current() != '\n' {
