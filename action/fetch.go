@@ -37,7 +37,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	defer fetchLock.Unlock()
 
 	body, header, needRefresh := cache.LoadResponse(action.URL)
-	if body == nil || len(body) == 0 || needRefresh {
+	if len(body) == 0 || needRefresh {
 		var err error
 		body, header, err = action.doFetch(ctx)
 		if err != nil && needRefresh {
@@ -97,7 +97,7 @@ func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Heade
 	if ctx.Proxy != "" {
 		proxy, err := url.Parse(ctx.Proxy)
 		if err != nil {
-			return nil, nil, errors.New(fmt.Sprintf("invalid proxy URL %s: %v", ctx.Proxy, err))
+			return nil, nil, fmt.Errorf("invalid proxy URL %s: %v", ctx.Proxy, err)
 		}
 		client.Transport = &http.Transport{
 			Proxy: http.ProxyURL(proxy),
@@ -109,7 +109,7 @@ func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Heade
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		return nil, nil, errors.New(fmt.Sprintf("failed to fetch URL %s, status code: %d", action.URL, response.StatusCode))
+		return nil, nil, fmt.Errorf("failed to fetch URL %s, status code: %d", action.URL, response.StatusCode)
 	}
 
 	body, err := io.ReadAll(response.Body)

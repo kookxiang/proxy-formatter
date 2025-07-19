@@ -50,11 +50,8 @@ func purgeExpiredDNSCacheRecord() {
 func init() {
 	go func() {
 		timer := time.NewTimer(5 * time.Minute)
-		for {
-			select {
-			case <-timer.C:
-				purgeExpiredDNSCacheRecord()
-			}
+		for range timer.C {
+			purgeExpiredDNSCacheRecord()
 		}
 	}()
 }
