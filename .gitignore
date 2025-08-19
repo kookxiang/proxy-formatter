@@ -1,3 +1,6 @@
+# geosite data
+geosite/*.dat
+
 # Binaries for current platform
 *.exe
 *.dll

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"proxy-provider/cache"
 	"proxy-provider/core"
+	"proxy-provider/geosite"
 
 	_ "proxy-provider/action"
 	_ "proxy-provider/formatter"
@@ -69,6 +70,7 @@ func main() {
 	cache.HTTPCacheFolder = cacheDir
 	_ = os.MkdirAll(cache.HTTPCacheFolder, 0755)
 
+	http.HandleFunc("/geosite/{name}", geosite.Serve)
 	http.HandleFunc("/", formulaHandler)
 	fmt.Printf("use formula from: %s\n", dir)
 	fmt.Printf("use cache folder: %s\n", cacheDir)

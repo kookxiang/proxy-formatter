@@ -47,6 +47,7 @@ require (
 	github.com/metacubex/bbolt v0.0.0-20240822011022-aed6d4850399 // indirect
 	github.com/metacubex/chacha v0.1.5 // indirect
 	github.com/metacubex/fswatch v0.1.1 // indirect
+	github.com/metacubex/geo v0.0.0-20240718103914-a4db326ccfd7 // indirect
 	github.com/metacubex/gopacket v1.1.20-0.20230608035415-7e2f98a3e759 // indirect
 	github.com/metacubex/gvisor v0.0.0-20250324165734-5857f47bd43b // indirect
 	github.com/metacubex/quic-go v0.52.1-0.20250522021943-aef454b9e639 // indirect
@@ -72,6 +73,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/puzpuzpuz/xsync/v3 v3.5.1 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
+	github.com/sagernet/sing v0.7.5 // indirect
 	github.com/samber/lo v1.50.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
 	github.com/sina-ghaderi/poly1305 v0.0.0-20220724002748-c5926b03988b // indirect
@@ -97,6 +99,6 @@ require (
 	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
 )
