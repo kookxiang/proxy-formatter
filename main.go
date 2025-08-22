@@ -70,6 +70,7 @@ func main() {
 	cache.HTTPCacheFolder = cacheDir
 	_ = os.MkdirAll(cache.HTTPCacheFolder, 0755)
 
+	http.HandleFunc("/geosite/domains/{name}", geosite.ServeDomainSet)
 	http.HandleFunc("/geosite/{name}", geosite.Serve)
 	http.HandleFunc("/", formulaHandler)
 	fmt.Printf("use formula from: %s\n", dir)

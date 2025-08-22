@@ -21,6 +21,16 @@ func init() {
 	}
 }
 
+func ServeDomainSet(writer http.ResponseWriter, request *http.Request) {
+	query := request.URL.Query()
+	query.Set("mode", "domain")
+	if strings.Contains(request.Header.Get("User-Agent"), "Surge") {
+		query.Set("mode", "plain")
+	}
+	request.URL.RawQuery = query.Encode()
+	Serve(writer, request)
+}
+
 func Serve(writer http.ResponseWriter, request *http.Request) {
 	parts := strings.Split(request.PathValue("name"), "@")
 	var name, key string
@@ -39,17 +49,15 @@ func Serve(writer http.ResponseWriter, request *http.Request) {
 			if !matchAttribute(item.Attribute, key) {
 				continue
 			}
-			switch item.Type {
-			case v2raygeo.Domain_Full:
-				_, _ = writer.Write([]byte("DOMAIN,"))
-				_, _ = writer.Write([]byte(item.Value))
-				_, _ = writer.Write([]byte("\n"))
-			case v2raygeo.Domain_Domain:
-				_, _ = writer.Write([]byte("DOMAIN-SUFFIX,"))
-				_, _ = writer.Write([]byte(item.Value))
-				_, _ = writer.Write([]byte("\n"))
-			case v2raygeo.Domain_Regex:
-				// not supported
+			switch request.URL.Query().Get("mode") {
+			default:
+				fallthrough
+			case "rule":
+				writeAsRuleSet(writer, item, strings.Contains(request.Header.Get("User-Agent"), "Surge"))
+			case "plain":
+				writeAsPlainDomainSet(writer, item)
+			case "domain":
+				writeAsDomainSet(writer, item)
 			}
 		}
 		return
@@ -57,8 +65,67 @@ func Serve(writer http.ResponseWriter, request *http.Request) {
 	http.Error(writer, name+" not found", http.StatusNotFound)
 }
 
+func writeAsRuleSet(writer http.ResponseWriter, rule *v2raygeo.Domain, supportRegex bool) {
+	switch rule.Type {
+	case v2raygeo.Domain_Plain:
+		fallthrough
+	case v2raygeo.Domain_Full:
+		_, _ = writer.Write([]byte("DOMAIN,"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Domain:
+		_, _ = writer.Write([]byte("DOMAIN-SUFFIX,"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Regex:
+		if !supportRegex {
+			_, _ = writer.Write([]byte("# "))
+		}
+		_, _ = writer.Write([]byte("DOMAIN-REGEX,"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	}
+}
+
+func writeAsDomainSet(writer http.ResponseWriter, rule *v2raygeo.Domain) {
+	switch rule.Type {
+	case v2raygeo.Domain_Plain:
+		fallthrough
+	case v2raygeo.Domain_Full:
+		_, _ = writer.Write([]byte("full:"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Domain:
+		_, _ = writer.Write([]byte("domain:"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Regex:
+		_, _ = writer.Write([]byte("regexp:"))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	}
+}
+
+func writeAsPlainDomainSet(writer http.ResponseWriter, rule *v2raygeo.Domain) {
+	switch rule.Type {
+	case v2raygeo.Domain_Plain:
+		fallthrough
+	case v2raygeo.Domain_Full:
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Domain:
+		_, _ = writer.Write([]byte("."))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	case v2raygeo.Domain_Regex:
+		_, _ = writer.Write([]byte("# REGEX: "))
+		_, _ = writer.Write([]byte(rule.Value))
+		_, _ = writer.Write([]byte("\n"))
+	}
+}
+
 func matchAttribute(attributes []*v2raygeo.Domain_Attribute, key string) bool {
-	if attributes == nil || len(attributes) == 0 {
+	if len(attributes) == 0 {
 		return key == "" || key == "all"
 	}
 	if key == "all" {
