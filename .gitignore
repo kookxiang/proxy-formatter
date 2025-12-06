@@ -2,6 +2,7 @@
 geosite/*.dat
 
 # Binaries for current platform
+proxy-formatter
 *.exe
 *.dll
 *.so

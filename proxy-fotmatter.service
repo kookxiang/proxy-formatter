@@ -1,0 +1,13 @@
+[Unit]
+After=network.target
+
+[Service]
+DynamicUser=yes
+Type=simple
+Restart=on-failure
+RestartSec=30s
+ExecStart=/usr/local/bin/proxy-formatter
+WorkingDirectory=/var/lib/proxy-formatter
+
+[Install]
+WantedBy=multi-user.target
