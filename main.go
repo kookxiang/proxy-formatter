@@ -64,7 +64,7 @@ func main() {
 	cwd, _ := os.Getwd()
 	flag.StringVar(&dir, "dir", cwd, "Directory to use as home directory for configuration files")
 	flag.StringVar(&cacheDir, "cache-dir", filepath.Join(os.TempDir(), "cache"), "Directory to use as cache directory for fetched data")
-	flag.IntVar(&port, "port", 8080, "Port to run the HTTP server on")
+	flag.IntVar(&port, "port", 15725, "Port to run the HTTP server on")
 	flag.Parse()
 
 	cache.HTTPCacheFolder = cacheDir
