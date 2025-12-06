@@ -3,10 +3,12 @@ After=network.target
 
 [Service]
 DynamicUser=yes
+StateDirectory=proxy-formatter
+CacheDirectory=proxy-formatter
 Type=simple
 Restart=on-failure
 RestartSec=30s
-ExecStart=/usr/local/bin/proxy-formatter
+ExecStart=/usr/local/bin/proxy-formatter -cache-dir /var/cache/proxy-formatter
 WorkingDirectory=/var/lib/proxy-formatter
 
 [Install]
