@@ -1,23 +1,59 @@
 package geosite
 
 import (
+	"bytes"
+	"crypto/sha256"
 	_ "embed"
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/metacubex/geo/encoding/v2raygeo"
 )
 
 var (
-	//go:embed geosite.dat
-	raw   []byte
-	Rules []*v2raygeo.GeoSite
+	Rules    []*v2raygeo.GeoSite
+	lastHash [32]byte
 )
 
 func init() {
-	var err error
-	if Rules, err = v2raygeo.LoadSite(raw); err != nil {
+	if err := loadSiteData(); err != nil {
 		panic(err)
+	}
+	go reloadSiteData()
+}
+
+func loadSiteData() error {
+	rawSiteData, err := os.ReadFile("geosite.dat")
+	if err != nil {
+		return err
+	}
+
+	// compute sha256 hash of current file
+	sum := sha256.Sum256(rawSiteData)
+
+	// if unchanged, skip loading
+	if bytes.Equal(sum[:], lastHash[:]) {
+		return nil
+	}
+
+	newRules, err := v2raygeo.LoadSite(rawSiteData)
+	if err == nil {
+		Rules = newRules
+		lastHash = sum
+	}
+	return err
+}
+
+func reloadSiteData() {
+	ticker := time.NewTicker(time.Hour)
+	for range ticker.C {
+		err := loadSiteData()
+		if err != nil {
+			fmt.Println("failed to reload geosite data:", err)
+		}
 	}
 }
 
