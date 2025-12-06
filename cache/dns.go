@@ -33,7 +33,7 @@ func SetDNSCache(resolver, host string, item *DNSCacheItem) {
 	defer dnsCacheLock.Unlock()
 
 	key := fmt.Sprintf("%s@%s", resolver, host)
-	item.expire = time.Now().Add(5 * time.Minute)
+	item.expire = time.Now().Add(2 * time.Minute)
 	dnsCacheStore[key] = item
 }
 
@@ -49,7 +49,7 @@ func purgeExpiredDNSCacheRecord() {
 
 func init() {
 	go func() {
-		timer := time.NewTimer(5 * time.Minute)
+		timer := time.NewTimer(1 * time.Minute)
 		for range timer.C {
 			purgeExpiredDNSCacheRecord()
 		}
