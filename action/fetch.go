@@ -56,8 +56,10 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 		}
 	}
 
-	if info := header.Get("Subscription-Userinfo"); info != "" {
-		ctx.ResHeader.Set("Subscription-Userinfo", info)
+	if action.Once {
+		ctx.ResHeader.Del(core.HeaderSubscriptionUserinfo)
+	} else if info := header.Get(core.HeaderSubscriptionUserinfo); info != "" {
+		ctx.ResHeader.Set(core.HeaderSubscriptionUserinfo, info)
 	}
 
 	schema := &provider.ProxySchema{}

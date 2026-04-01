@@ -54,7 +54,7 @@ func parseSubscriptionInfo(info string) SubscriptionInfo {
 }
 
 func (action *CheckTrafficAction) Execute(ctx *core.ExecuteContext) error {
-	info := ctx.ResHeader.Get("Subscription-Userinfo")
+	info := ctx.ResHeader.Get(core.HeaderSubscriptionUserinfo)
 	if info == "" {
 		return nil
 	}
