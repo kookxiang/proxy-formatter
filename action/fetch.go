@@ -24,12 +24,19 @@ func init() {
 		}
 		return &FetchAction{URL: params[1]}, nil
 	})
+	core.RegisterAction("fetch-once", func(params []string) (core.Action, error) {
+		if len(params) != 2 {
+			return nil, errors.New("invalid action rule format, expected 'action <url>'")
+		}
+		return &FetchAction{URL: params[1], Once: true}, nil
+	})
 }
 
 var fetchLock = &sync.Mutex{}
 
 type FetchAction struct {
-	URL string
+	URL  string
+	Once bool
 }
 
 func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
@@ -37,7 +44,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	defer fetchLock.Unlock()
 
 	body, header, needRefresh := cache.LoadResponse(action.URL)
-	if len(body) == 0 || needRefresh {
+	if len(body) == 0 || (needRefresh && !action.Once) {
 		var err error
 		body, header, err = action.doFetch(ctx)
 		if err != nil && needRefresh {
@@ -88,6 +95,7 @@ func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Heade
 	if err != nil {
 		return nil, nil, err
 	}
+	fmt.Println("fetch remote resource from", urlObj.Host)
 	request := &http.Request{
 		Method: http.MethodGet,
 		URL:    urlObj,
