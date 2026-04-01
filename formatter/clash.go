@@ -5,6 +5,7 @@ import (
 	"proxy-provider/core"
 	"proxy-provider/util"
 
+	"github.com/metacubex/mihomo/constant"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,6 +36,9 @@ func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
 		}
 		if config["udp-over-tcp-version"] == 1 {
 			delete(config, "udp-over-tcp-version")
+		}
+		if config["ip-version"] == constant.DualStack {
+			delete(config, "ip-version")
 		}
 		proxies = append(proxies, config)
 	}
