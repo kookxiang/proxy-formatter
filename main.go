@@ -43,11 +43,11 @@ func readEditorFormula(content []byte) (string, bool) {
 	if !strings.HasPrefix(text, editorComment+"\n# ") {
 		return "", false
 	}
-	bodyIndex := strings.Index(text, "\n\n")
-	if bodyIndex < 0 {
+	_, body, found := strings.Cut(text, "\n\n")
+	if !found {
 		return "", false
 	}
-	return text[bodyIndex+2:], true
+	return body, true
 }
 
 func formulaHandler(writer http.ResponseWriter, request *http.Request) {

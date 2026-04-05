@@ -39,7 +39,7 @@ func (formatter *SurgeFormatter) Execute(ctx *core.ExecuteContext) error {
 			ctx.Write(fmt.Sprintf("%s = trojan, %s, %d", proxy.Name, value.Server, value.Port))
 			ctx.Write(formatter.formatTrojan(value))
 		default:
-			return errors.New("not implemented proxy type: " + fmt.Sprintf("%T", value))
+			return fmt.Errorf("not implemented proxy type: %T", value)
 		}
 	}
 	return nil

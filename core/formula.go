@@ -65,7 +65,7 @@ func (s *FormulaScanner) PreviewNext() byte {
 }
 
 func (s *FormulaScanner) ScanAction() (Action, error) {
-	buf := &bytes.Buffer{}
+	var buf bytes.Buffer
 	isLeadingSpaces := true
 	params := make([]string, 0)
 	for s.HasNext() {
@@ -104,7 +104,7 @@ func (s *FormulaScanner) ScanAction() (Action, error) {
 }
 
 func (s *FormulaScanner) ScanParams() string {
-	buf := &bytes.Buffer{}
+	var buf bytes.Buffer
 	inQuote := s.PreviewNext() == '"'
 	escape := false
 	if inQuote {
