@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Proxy Formatter Editor</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --text: #182126;
+        --muted: #5d6a73;
+        --border: rgba(24, 33, 38, 0.12);
+        --accent: #0f766e;
+        --accent-strong: #0284c7;
+        --danger: #b42318;
+        --glow: rgba(2, 132, 199, 0.16);
+        --shadow: 0 24px 60px rgba(40, 54, 61, 0.14);
+        --surface: rgba(255, 252, 247, 0.82);
+        --surface-strong: rgba(255, 255, 255, 0.74);
+        --surface-header: rgba(255, 251, 245, 0.92);
+        --control-bg: rgba(255, 253, 248, 0.96);
+        --code-bg: rgba(15, 118, 110, 0.1);
+        --code-border: rgba(15, 118, 110, 0.08);
+        --code-text: #115e59;
+        --editor-bg: #fffdf8;
+        --editor-line-highlight: #f6f1e8;
+        --editor-line-number: #93a1aa;
+        --editor-line-number-active: #182126;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(2, 132, 199, 0.12), transparent 24%),
+          linear-gradient(180deg, #f8f3ea 0%, #eef4f6 100%);
+      }
+
+      .shell {
+        width: 100vw;
+        min-height: 100vh;
+        margin: 0;
+        padding: 18px;
+        border: 0;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+          var(--surface);
+        backdrop-filter: blur(18px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .hero {
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 4px 0;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(26px, 3.2vw, 38px);
+        font-family: "IBM Plex Sans", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      button,
+      select {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--control-bg);
+        color: var(--text);
+        font: inherit;
+      }
+
+      button {
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(56, 189, 248, 0.42);
+        box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.08);
+      }
+
+      button.primary {
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+        color: white;
+        font-weight: 700;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 28px var(--glow);
+      }
+
+      select {
+        padding: 10px 14px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
+        min-height: 0;
+      }
+
+      .panel {
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(56, 189, 248, 0.05), rgba(56, 189, 248, 0)),
+          var(--surface-strong);
+        min-height: 0;
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-header);
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent-strong);
+      }
+
+      #editor {
+        height: calc(100vh - 170px);
+        min-height: 520px;
+      }
+
+      .side {
+        display: grid;
+        grid-template-rows: repeat(3, minmax(0, auto));
+        gap: 16px;
+        align-content: start;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .card-head h2 {
+        margin: 0;
+      }
+
+      .card-link {
+        color: var(--accent-strong);
+        font-size: 13px;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .card-link:hover {
+        text-decoration: underline;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .card ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .legend {
+        display: grid;
+        gap: 8px;
+      }
+
+      .legend div {
+        padding: 0;
+        white-space: nowrap;
+      }
+
+      .legend code {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        border: 1px solid var(--code-border);
+      }
+
+      .tips {
+        white-space: pre-wrap;
+        font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      @media (min-width: 1440px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr) 360px;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text: #e7f3ff;
+          --muted: #8aa3ba;
+          --border: rgba(107, 190, 255, 0.18);
+          --accent: #2dd4bf;
+          --accent-strong: #38bdf8;
+          --danger: #fb7185;
+          --glow: rgba(56, 189, 248, 0.22);
+          --shadow: 0 24px 80px rgba(2, 8, 23, 0.45);
+          --surface: rgba(7, 17, 31, 0.82);
+          --surface-strong: rgba(9, 22, 40, 0.94);
+          --surface-header: rgba(10, 21, 37, 0.94);
+          --control-bg: rgba(8, 20, 36, 0.9);
+          --code-bg: rgba(45, 212, 191, 0.12);
+          --code-border: rgba(45, 212, 191, 0.14);
+          --code-text: #97f8eb;
+          --editor-bg: #081426;
+          --editor-line-highlight: #10203a;
+          --editor-line-number: #4d6782;
+          --editor-line-number-active: #dbeeff;
+        }
+
+        body {
+          background:
+            radial-gradient(circle at top left, rgba(45, 212, 191, 0.2), transparent 22%),
+            radial-gradient(circle at top right, rgba(56, 189, 248, 0.18), transparent 28%),
+            radial-gradient(circle at bottom center, rgba(34, 197, 94, 0.1), transparent 24%),
+            linear-gradient(180deg, #07111f 0%, #0a1425 48%, #0a1020 100%);
+        }
+
+        button.primary {
+          color: #04111d;
+        }
+      }
+
+      @media (max-width: 960px) {
+        .shell {
+          padding: 12px;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        #editor {
+          height: 60vh;
+          min-height: 420px;
+        }
+
+        .hero {
+          flex-direction: column;
+        }
+
+        .actions {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <h1>Proxy Formatter 规则配置</h1>
+        </div>
+        <div class="actions">
+          <select id="example-select" aria-label="选择示例">
+            <option value="basic">基础示例</option>
+            <option value="traffic">流量检查</option>
+            <option value="multi">多订阅拼接</option>
+          </select>
+          <button id="view-code" type="button">查看</button>
+          <button id="save-code" class="primary">保存</button>
+        </div>
+      </section>
+
+      <section class="layout">
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Editor</h2>
+          </div>
+          <div id="editor"></div>
+        </div>
+
+        <aside class="side">
+          <section class="panel card">
+            <div class="card-head">
+              <h2>指令速查</h2>
+              <a
+                class="card-link"
+                href="https://github.com/kookxiang/proxy-formatter#%E6%94%AF%E6%8C%81%E7%9A%84%E6%8C%87%E4%BB%A4"
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看完整说明
+              </a>
+            </div>
+            <div class="legend">
+              <div><code>fetch</code> / <code>fetch-once</code> 拉取订阅</div>
+              <div><code>include</code> / <code>exclude</code> 过滤节点</div>
+              <div><code>replace</code> / <code>prefix</code> / <code>suffix</code> 改名</div>
+              <div><code>header</code> / <code>proxy</code> 设置请求行为</div>
+              <div><code>resolve</code> / <code>check-traffic</code> 处理地址和流量</div>
+              <div><code>clash</code> / <code>surge [version]</code> 输出格式</div>
+            </div>
+          </section>
+
+          <section class="panel card">
+            <h2>语法规则</h2>
+            <ul>
+              <li>一行一个指令，按顺序执行。</li>
+              <li>空行会忽略，行首 <code>#</code> 代表注释。</li>
+              <li>参数支持双引号，适合带空格的值。</li>
+              <li><code>/.../</code> 会按正则处理，其余按普通字符串匹配。</li>
+            </ul>
+          </section>
+
+          <section class="panel card">
+            <h2>结果面板</h2>
+            <div id="tips" class="tips">保存时服务端会校验语法、检查密码，并在成功后生成随机文件名。</div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+    <script>
+      const PASSWORD_STORAGE_KEY = "proxy-formatter-save-password";
+      const tipsNode = document.getElementById("tips");
+      const urlParams = new URLSearchParams(window.location.search);
+      const editTarget = urlParams.get("edit") || "";
+      const viewButton = document.getElementById("view-code");
+
+      const examples = {
+        basic: `# 从远端获取原始订阅
+fetch https://example.com/proxies.yaml
+
+# 设置请求头
+header User-Agent "Clash.Meta"
+
+# 只保留日本节点
+include /日本/
+
+# 给节点名前面加一个标签
+prefix Tokyo
+
+# 输出为 Clash 格式
+clash
+`,
+        traffic: `fetch https://example.com/proxies.yaml
+check-traffic
+exclude /剩余流量|即将到期/
+emoji
+replace IEPL IPLC
+suffix Premium
+clash
+`,
+        multi: `fetch https://example.com/a.yaml
+include /香港|日本/
+prefix A
+freeze
+
+fetch https://example.com/b.yaml
+include /新加坡|美国/
+prefix B
+resolve 1.1.1.1
+surge 5
+`,
+      };
+
+      function escapeHtml(text) {
+        return text
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+
+      function renderValidation(ok, message) {
+        if (ok) {
+          tipsNode.innerHTML = "保存成功，可以直接访问新生成的配置地址。";
+          return;
+        }
+
+        tipsNode.innerHTML = escapeHtml(message || "未知错误");
+      }
+
+      require.config({
+        paths: {
+          vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs",
+        },
+      });
+
+      require(["vs/editor/editor.main"], function () {
+        if (!editTarget) {
+          viewButton.hidden = true;
+        } else {
+          viewButton.hidden = false;
+          viewButton.addEventListener("click", () => {
+            window.open(`/${encodeURIComponent(editTarget)}`, "_blank", "noopener,noreferrer");
+          });
+        }
+
+        monaco.languages.register({ id: "proxy-formatter" });
+
+        monaco.languages.setMonarchTokensProvider("proxy-formatter", {
+          tokenizer: {
+            root: [
+              [/^\s*#.*$/, "comment"],
+              [/\b(fetch-once|fetch|include|exclude|emoji|replace|prefix|suffix|freeze|header|proxy|resolve|check-traffic|clash|surge)\b/, "keyword"],
+              [/\/([^\\\/]|\\.)+\//, "regexp"],
+              [/"([^"\\]|\\.)*"/, "string"],
+              [/\bhttps?:\/\/[^\s"]+/, "string.escape"],
+              [/\b\d+(?:\.\d+){0,3}\b/, "number"],
+            ],
+          },
+        });
+
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+        function applyEditorTheme(isDark) {
+          monaco.editor.defineTheme("proxy-formatter-theme", {
+            base: isDark ? "vs-dark" : "vs",
+            inherit: true,
+            rules: [
+              { token: "comment", foreground: "7a8b94", fontStyle: "italic" },
+              { token: "keyword", foreground: isDark ? "2dd4bf" : "0f766e", fontStyle: "bold" },
+              { token: "regexp", foreground: isDark ? "f59e0b" : "b54708" },
+              { token: "string", foreground: isDark ? "60a5fa" : "1d4ed8" },
+              { token: "string.escape", foreground: isDark ? "c084fc" : "9333ea" },
+              { token: "number", foreground: isDark ? "fb7185" : "c2410c" },
+            ],
+            colors: {
+              "editor.background": getComputedStyle(document.documentElement).getPropertyValue("--editor-bg").trim(),
+              "editor.lineHighlightBackground": getComputedStyle(document.documentElement).getPropertyValue("--editor-line-highlight").trim(),
+              "editorLineNumber.foreground": getComputedStyle(document.documentElement).getPropertyValue("--editor-line-number").trim(),
+              "editorLineNumber.activeForeground": getComputedStyle(document.documentElement).getPropertyValue("--editor-line-number-active").trim(),
+            },
+          });
+          monaco.editor.setTheme("proxy-formatter-theme");
+        }
+
+        applyEditorTheme(prefersDark.matches);
+
+        const editor = monaco.editor.create(document.getElementById("editor"), {
+          value: examples.basic,
+          language: "proxy-formatter",
+          theme: "proxy-formatter-theme",
+          automaticLayout: true,
+          fontFamily: '"IBM Plex Mono", "SFMono-Regular", monospace',
+          fontSize: 14,
+          lineHeight: 22,
+          minimap: { enabled: false },
+          roundedSelection: true,
+          scrollBeyondLastLine: false,
+          padding: { top: 16, bottom: 16 },
+        });
+
+        async function loadFormula() {
+          if (!editTarget) {
+            return;
+          }
+
+          tipsNode.textContent = "正在加载已有配置 ...";
+          try {
+            const response = await fetch(`/${encodeURIComponent(editTarget)}?type=formula`);
+            if (!response.ok) {
+              throw new Error("配置不存在，或不是通过编辑器创建的配置");
+            }
+            const content = await response.text();
+            editor.setValue(content);
+            tipsNode.textContent = `正在编辑已有配置：${editTarget}`;
+          } catch (error) {
+            renderValidation(false, error.message);
+          }
+        }
+
+        if (prefersDark.addEventListener) {
+          prefersDark.addEventListener("change", (event) => {
+            applyEditorTheme(event.matches);
+          });
+        } else if (prefersDark.addListener) {
+          prefersDark.addListener((event) => {
+            applyEditorTheme(event.matches);
+          });
+        }
+
+        async function save() {
+          const cachedPassword = localStorage.getItem(PASSWORD_STORAGE_KEY) || "";
+          const password = cachedPassword || window.prompt("为防止资源滥用，需要输入配置密码，如有疑问请联系服务器管理员", "");
+          if (password === null) {
+            return;
+          }
+          if (!password) {
+            renderValidation(false, "保存前必须输入密码。");
+            return;
+          }
+
+          localStorage.setItem(PASSWORD_STORAGE_KEY, password);
+          tipsNode.textContent = "正在请求 /new ...";
+          try {
+            const response = await fetch("/new", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+              body: JSON.stringify({
+                password,
+                content: editor.getValue(),
+                edit: editTarget,
+              }),
+            });
+            const result = await response.json();
+            if (!response.ok || !result.ok) {
+              if (response.status === 401) {
+                localStorage.removeItem(PASSWORD_STORAGE_KEY);
+              }
+              renderValidation(false, result.error || "保存失败");
+              return;
+            }
+
+            tipsNode.innerHTML = `已生成配置：${escapeHtml(result.filename)}\n访问地址：${escapeHtml(result.path)}`;
+            renderValidation(true);
+            if (!editTarget) {
+              window.location.href = `/?edit=${encodeURIComponent(result.filename)}`;
+              return;
+            }
+
+            tipsNode.innerHTML = `已保存配置：${escapeHtml(result.filename)}\n访问地址：${escapeHtml(result.path)}`;
+          } catch (error) {
+            renderValidation(false, `请求失败: ${error.message}`);
+          }
+        }
+
+        document.getElementById("example-select").addEventListener("change", (event) => {
+          const key = event.target.value;
+          editor.setValue(examples[key]);
+          tipsNode.textContent = "示例已载入，可直接继续修改。";
+        });
+
+        document.getElementById("save-code").addEventListener("click", save);
+        loadFormula();
+      });
+    </script>
+  </body>
+</html>
