@@ -15,13 +15,13 @@
 2. **启动服务**
    运行程序时，指定配置文件所在的目录：
    ```bash
-  ./proxy-formatter -dir /path/to/config
+   ./proxy-formatter -dir /path/to/config
    ```
 
 3. **访问 HTTP 服务**
-  程序会启动一个 HTTP 服务，默认监听 `15725` 端口。通过访问对应的文件路径，程序会按照配置文件中的操作逐一执行。例如：
+   程序会启动一个 HTTP 服务，默认监听 `15725` 端口。通过访问对应的文件路径，程序会按照配置文件中的操作逐一执行。例如：
    ```
-  http://localhost:15725/config.txt
+   http://localhost:15725/config.txt
    ```
 
 4. **日志与缓存**
