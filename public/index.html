@@ -438,7 +438,7 @@ surge 5
         } else {
           viewButton.hidden = false;
           viewButton.addEventListener("click", () => {
-            window.open(`/${encodeURIComponent(editTarget)}`, "_blank", "noopener,noreferrer");
+            window.open(`./${encodeURIComponent(editTarget)}`, "_blank", "noopener,noreferrer");
           });
         }
 
@@ -504,7 +504,7 @@ surge 5
 
           tipsNode.textContent = "正在加载已有配置 ...";
           try {
-            const response = await fetch(`/${encodeURIComponent(editTarget)}?type=formula`);
+            const response = await fetch(`./${encodeURIComponent(editTarget)}?type=formula`);
             if (!response.ok) {
               throw new Error("配置不存在，或不是通过编辑器创建的配置");
             }
@@ -538,9 +538,9 @@ surge 5
           }
 
           localStorage.setItem(PASSWORD_STORAGE_KEY, password);
-          tipsNode.textContent = "正在请求 /new ...";
+          tipsNode.textContent = "正在请求 new ...";
           try {
-            const response = await fetch("/new", {
+            const response = await fetch("new", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json; charset=utf-8",
@@ -563,7 +563,7 @@ surge 5
             tipsNode.innerHTML = `已生成配置：${escapeHtml(result.filename)}\n访问地址：${escapeHtml(result.path)}`;
             renderValidation(true);
             if (!editTarget) {
-              window.location.href = `/?edit=${encodeURIComponent(result.filename)}`;
+              window.location.href = `./?edit=${encodeURIComponent(result.filename)}`;
               return;
             }
 
