@@ -1,5 +1,5 @@
 # geosite data
-geosite/*.dat
+geosite.dat
 
 # Binaries for current platform
 proxy-formatter
