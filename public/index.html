@@ -551,11 +551,14 @@ surge 5
                 edit: editTarget,
               }),
             });
+            if (response.status === 401) {
+              localStorage.removeItem(PASSWORD_STORAGE_KEY);
+              renderValidation(false, "配置密码错误");
+              return;
+            }
+
             const result = await response.json();
             if (!response.ok || !result.ok) {
-              if (response.status === 401) {
-                localStorage.removeItem(PASSWORD_STORAGE_KEY);
-              }
               renderValidation(false, result.error || "保存失败");
               return;
             }
