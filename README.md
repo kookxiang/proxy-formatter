@@ -5,7 +5,7 @@
 它会读取本地配置文件，按顺序执行其中的指令，然后把结果输出成目标格式。目前内置了两类能力：
 
 - 指令：抓取、过滤、改名、改请求头、解析 DNS、检查订阅流量等
-- 格式化器：输出为 `clash`、`surge` 或 `loon` 订阅内容
+- 格式化器：输出为 `clash`、`surge`、`loon` 或 `sing-box` 配置内容
 
 本项目使用 `GPL-3.0` 许可证发布。
 
@@ -300,10 +300,10 @@ Content-Type: text/plain; charset=utf-8
 
 其中：
 
-- `Shadowsocks` 支持基础格式，以及 `simple-obfs` / `shadow-tls` 常见字段映射
+- `Shadowsocks` 支持基础格式，以及 `simple-obfs`
 - `Trojan` 支持普通 TLS 与 `ws`
 - `VLESS` 支持 `tcp`、`ws`、`http`，以及 `reality` 所需的 `public-key` / `short-id`
-- `VMess` 支持 `tcp`、`ws`、`http`，以及 `h2 -> http` 的 Loon 映射
+- `VMess` 支持 `tcp`、`ws`
 
 如果遇到其它代理类型或未覆盖的传输方式，会直接返回错误。
 
@@ -312,6 +312,76 @@ Content-Type: text/plain; charset=utf-8
 ```text
 Content-Type: text/plain; charset=utf-8
 ```
+
+### sing-box [base-config-url]
+
+把当前节点输出为 sing-box 风格的 JSON 配置。
+
+- 不带参数时，会输出一个只包含当前代理节点的最小配置
+- 带上 `base-config-url` 时，会先拉取基础配置，再把当前生成的节点合并进原有 `outbounds`
+- 如果基础配置里已经存在同名 `tag`，会用当前生成的节点覆盖它
+- 如果基础配置里有 `selector` / `urltest`，它们的 `outbounds` 可以写关键词，例如 `HK`、`SG`、`JP`
+- 程序会把这些关键词展开成真实节点名，例如节点名里包含 `HK` 的节点会自动加入对应分组
+
+当前实现是一个精简支持集，主要覆盖常见场景：
+
+- `Shadowsocks`：基础格式、`simple-obfs`
+- `Trojan`：`tcp`、`ws`
+- `VLESS`：`tcp`、`ws`、`http`
+
+<details>
+<summary>查看 sing-box 合并示例</summary>
+
+基础配置：
+
+```json
+{
+  "outbounds": [
+    {
+      "type": "selector",
+      "tag": "Proxy",
+      "outbounds": ["HK", "SG", "DIRECT"]
+    },
+    {
+      "type": "urltest",
+      "tag": "Auto",
+      "outbounds": ["HK", "JP"]
+    }
+  ]
+}
+```
+
+规则文件：
+
+```text
+fetch https://example.com/proxies.yaml
+include /香港|新加坡|日本/
+emoji
+sing-box https://example.com/base-sing-box.json
+```
+
+如果当前生成出的节点名称里有：
+
+- `HK IPLC 01`
+- `HK IPLC 02`
+- `SG Premium`
+- `JP Tokyo`
+
+那么合并后：
+
+- `Proxy` 会展开成 `HK IPLC 01`、`HK IPLC 02`、`SG Premium`，同时保留 `DIRECT`
+- `Auto` 会展开成 `HK IPLC 01`、`HK IPLC 02`、`JP Tokyo`
+
+</details>
+
+响应头会设置为：
+
+```text
+Content-Type: application/json; charset=utf-8
+```
+
+> [!WARNING]
+> `sing-box` 当前实现是一个精简支持集，部分相对少用的协议细节和传输方式已经被收敛。如果你确实需要当前未覆盖的功能，欢迎提交 PR，或提 issue / 直接反馈。
 
 ## 部署
 
