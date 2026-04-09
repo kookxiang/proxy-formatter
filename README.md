@@ -5,7 +5,7 @@
 它会读取本地配置文件，按顺序执行其中的指令，然后把结果输出成目标格式。目前内置了两类能力：
 
 - 指令：抓取、过滤、改名、改请求头、解析 DNS、检查订阅流量等
-- 格式化器：输出为 `clash` 或 `surge` 订阅内容
+- 格式化器：输出为 `clash`、`surge` 或 `loon` 订阅内容
 
 本项目使用 `GPL-3.0` 许可证发布。
 
@@ -287,6 +287,32 @@ Content-Type: text/yaml; charset=utf-8
 Content-Type: text/plain; charset=utf-8
 ```
 
+### loon
+
+把当前节点输出为 Loon 节点行格式。
+
+当前实现只支持以下代理类型：
+
+- `Shadowsocks`
+- `Trojan`
+- `VLESS`
+- `VMess`
+
+其中：
+
+- `Shadowsocks` 支持基础格式，以及 `simple-obfs` / `shadow-tls` 常见字段映射
+- `Trojan` 支持普通 TLS 与 `ws`
+- `VLESS` 支持 `tcp`、`ws`、`http`，以及 `reality` 所需的 `public-key` / `short-id`
+- `VMess` 支持 `tcp`、`ws`、`http`，以及 `h2 -> http` 的 Loon 映射
+
+如果遇到其它代理类型或未覆盖的传输方式，会直接返回错误。
+
+响应头会设置为：
+
+```text
+Content-Type: text/plain; charset=utf-8
+```
+
 ## 部署
 
 ### 1. 构建
@@ -307,6 +333,14 @@ include /香港|日本|新加坡/
 emoji
 prefix IPLC
 clash
+```
+
+Loon 输出示例：
+
+```text
+fetch https://example.com/proxies.yaml
+include /香港|日本/
+loon
 ```
 
 ### 3. 启动服务

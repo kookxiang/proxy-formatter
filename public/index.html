@@ -343,7 +343,7 @@
               <div><code>replace</code> / <code>prefix</code> / <code>suffix</code> 改名</div>
               <div><code>header</code> / <code>proxy</code> 设置请求行为</div>
               <div><code>resolve</code> / <code>check-traffic</code> 处理地址和流量</div>
-              <div><code>clash</code> / <code>surge [version]</code> 输出格式</div>
+              <div><code>clash</code> / <code>surge [version]</code> / <code>loon</code> 输出格式</div>
             </div>
           </section>
 
@@ -448,7 +448,7 @@ surge 5
           tokenizer: {
             root: [
               [/^\s*#.*$/, "comment"],
-              [/\b(fetch-once|fetch|include|exclude|emoji|replace|prefix|suffix|freeze|header|proxy|resolve|check-traffic|clash|surge)\b/, "keyword"],
+              [/\b(fetch-once|fetch|include|exclude|emoji|replace|prefix|suffix|freeze|header|proxy|resolve|check-traffic|clash|surge|loon)\b/, "keyword"],
               [/\/([^\\\/]|\\.)+\//, "regexp"],
               [/"([^"\\]|\\.)*"/, "string"],
               [/\bhttps?:\/\/[^\s"]+/, "string.escape"],
