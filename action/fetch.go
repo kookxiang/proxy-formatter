@@ -60,6 +60,7 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	if action.Once {
 		ctx.ResHeader.Del(core.HeaderSubscriptionUserinfo)
 	}
+	ctx.ResHeader.Del("Content-Disposition")
 
 	schema := &provider.ProxySchema{}
 	// try yaml first
