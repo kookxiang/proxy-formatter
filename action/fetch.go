@@ -1,10 +1,7 @@
 package action
 
 import (
-	"crypto/sha256"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"proxy-provider/cache"
@@ -43,23 +40,25 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	fetchLock.Lock()
 	defer fetchLock.Unlock()
 
-	body, header, needRefresh := cache.LoadResponse(action.URL)
-	if len(body) == 0 || (needRefresh && !action.Once) {
-		var err error
-		body, header, err = action.doFetch(ctx)
-		if err != nil && needRefresh {
-			fmt.Println("refreshing cache for url", action.URL, "failed:", err)
-		} else if err != nil {
-			return err
-		} else {
-			cache.SaveResponse(action.URL, body, header)
-		}
+	urlObj, err := url.Parse(action.URL)
+	if err != nil {
+		return err
 	}
 
+	request := &http.Request{
+		Method: http.MethodGet,
+		URL:    urlObj,
+		Header: ctx.ReqHeader,
+	}
+
+	body, header, err := cache.RequestWithCache(ctx, request, action.Once)
+	if err != nil {
+		return err
+	}
+
+	ctx.ResHeader = header.Clone()
 	if action.Once {
 		ctx.ResHeader.Del(core.HeaderSubscriptionUserinfo)
-	} else if info := header.Get(core.HeaderSubscriptionUserinfo); info != "" {
-		ctx.ResHeader.Set(core.HeaderSubscriptionUserinfo, info)
 	}
 
 	schema := &provider.ProxySchema{}
@@ -90,45 +89,4 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	}
 
 	return nil
-}
-
-func (action *FetchAction) doFetch(ctx *core.ExecuteContext) ([]byte, http.Header, error) {
-	urlObj, err := url.Parse(action.URL)
-	if err != nil {
-		return nil, nil, err
-	}
-	fmt.Println("fetch remote resource from", urlObj.Host)
-	request := &http.Request{
-		Method: http.MethodGet,
-		URL:    urlObj,
-		Header: ctx.ReqHeader,
-	}
-	client := &http.Client{}
-	if ctx.Proxy != "" {
-		proxy, err := url.Parse(ctx.Proxy)
-		if err != nil {
-			return nil, nil, fmt.Errorf("invalid proxy URL %s: %v", ctx.Proxy, err)
-		}
-		client.Transport = &http.Transport{
-			Proxy: http.ProxyURL(proxy),
-		}
-	}
-	response, err := client.Do(request)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer response.Body.Close()
-	if response.StatusCode != http.StatusOK {
-		return nil, nil, fmt.Errorf("failed to fetch URL %s, status code: %d", action.URL, response.StatusCode)
-	}
-
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, nil, err
-	}
-	return body, response.Header, nil
-}
-
-func (action *FetchAction) Hash() string {
-	return fmt.Sprintf("%x", sha256.Sum224([]byte(action.URL)))
 }
