@@ -41,3 +41,5 @@ out/
 # Environment variables and sensitive data
 .env
 *.envrc
+
+action/atlas*
