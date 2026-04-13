@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,19 +14,22 @@ import (
 	"proxy-provider/core"
 	"proxy-provider/geosite"
 	"proxy-provider/util"
+	"regexp"
 	"strings"
 	"time"
 
 	_ "proxy-provider/action"
 	_ "proxy-provider/formatter"
-
-	"github.com/gofrs/uuid/v5"
 )
 
 //go:embed public/index.html
 var newPageHTML []byte
 
 const editorComment = "# Created by WebUI Editor"
+
+const fileTokenBytes = 48
+
+var formulaFileNamePattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
 func writeJSONError(writer http.ResponseWriter, statusCode int, err error) {
 	writer.WriteHeader(statusCode)
@@ -50,6 +55,22 @@ func readEditorFormula(content []byte) (string, bool) {
 	return body, true
 }
 
+func newRandomFileToken() (string, error) {
+	token := make([]byte, fileTokenBytes)
+	if _, err := rand.Read(token); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(token), nil
+}
+
+func resolveFormulaPath(name string) (string, error) {
+	fileName := strings.TrimPrefix(name, "/")
+	if fileName == "" || !formulaFileNamePattern.MatchString(fileName) {
+		return "", fmt.Errorf("invalid formula path")
+	}
+	return filepath.Join(dir, fileName), nil
+}
+
 func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -59,7 +80,11 @@ func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	filePath := filepath.Join(dir, filepath.Clean(request.URL.Path))
+	filePath, err := resolveFormulaPath(request.URL.Path)
+	if err != nil {
+		writer.WriteHeader(http.StatusForbidden)
+		return
+	}
 	if stat, err := os.Stat(filePath); err != nil {
 		fmt.Println("file", filePath, "not found")
 		writer.WriteHeader(http.StatusNotFound)
@@ -151,7 +176,11 @@ func saveHandler(writer http.ResponseWriter, request *http.Request) {
 	content := buildEditorContent(payload.Content)
 	fileName := payload.Edit
 	if fileName != "" {
-		filePath := filepath.Join(dir, fileName)
+		filePath, err := resolveFormulaPath(fileName)
+		if err != nil {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
 		existingContent, err := os.ReadFile(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -170,13 +199,13 @@ func saveHandler(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 	} else {
-		fileID, err := uuid.NewV4()
-		if err != nil {
-			writeJSONError(writer, http.StatusInternalServerError, err)
+		token, tokenErr := newRandomFileToken()
+		if tokenErr != nil {
+			writeJSONError(writer, http.StatusInternalServerError, tokenErr)
 			return
 		}
+		fileName = token
 
-		fileName = fileID.String()
 		filePath := filepath.Join(dir, fileName)
 		if _, err := os.Stat(filePath); err == nil {
 			writeJSONError(writer, http.StatusInternalServerError, fmt.Errorf("file already exists: %s", fileName))
