@@ -94,6 +94,24 @@ clash
 fetch https://example.com/proxies.yaml
 ```
 
+### fetch-external <command> [args...]
+
+执行本机上的第三方命令抓取订阅内容，并读取它的标准输出。
+
+说明：
+
+- 默认禁用，只有启动时显式传入 `-allow-external-script` 才可用
+- 输出内容会先按 YAML 解析，失败后回退尝试解析为 Base64 订阅
+- 适合对接已有脚本、私有 CLI 或需要特殊认证流程的外部工具
+- 这是一个高风险能力，因为规则文件会直接触发本机命令执行
+- 如果同时启用在线编辑，用户提交的恶意规则可能借此执行本机命令，因此不推荐与 `-editor` 一起使用
+
+示例：
+
+```text
+fetch-external "/usr/local/bin/subfetch" "--format=yaml"
+```
+
 ### fetch-once <url>
 
 与 `fetch` 类似，但只在本地没有缓存时拉取远端内容；一旦缓存存在，即使缓存可刷新，也优先使用缓存。
@@ -423,6 +441,7 @@ loon
 
 - `-dir`：配置文件所在目录，默认是当前工作目录
 - `-cache-dir`：HTTP 抓取缓存目录，默认是系统临时目录下的 `cache`
+- `-allow-external-script`：允许 `fetch-external` 执行第三方命令，默认关闭
 - `-editor`：启用在线编辑器，注意需要配合 `-password` 使用
 - `-password`：保存配置时需要提供的密码
 - `-port`：HTTP 服务端口，默认是 `15725`
@@ -456,6 +475,7 @@ http://localhost:15725/?edit=<配置文件名>
 - 配置文件是按顺序执行的，指令顺序会直接影响结果
 - 如果你需要处理带空格的参数，请使用双引号
 - `fetch-once` 不会主动刷新已有缓存
+- 启用 `-allow-external-script` 后，规则文件将具备执行本机命令的能力；如果再同时启用 `-editor`，用户提交的恶意规则可能被服务端直接执行，因此不推荐启用在线编辑功能
 - `surge` 当前不是全协议覆盖，复杂订阅建议优先用 `clash`
 
 ## 系统服务

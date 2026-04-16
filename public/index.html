@@ -338,7 +338,7 @@
               </a>
             </div>
             <div class="legend">
-              <div><code>fetch</code> / <code>fetch-once</code> 拉取订阅</div>
+              <div><code>fetch</code> / <code>fetch-once</code> / <code>fetch-external</code> 拉取订阅</div>
               <div><code>1yunti</code> / <code>flyingbird</code> Atlas 面板登录并拉取订阅</div>
               <div><code>include</code> / <code>exclude</code> 过滤节点</div>
               <div><code>replace</code> / <code>prefix</code> / <code>suffix</code> 改名</div>
@@ -449,7 +449,7 @@ surge 5
           tokenizer: {
             root: [
               [/^\s*#.*$/, "comment"],
-              [/\b(fetch-once|fetch|1yunti|flyingbird|include|exclude|emoji|replace|prefix|suffix|freeze|header|proxy|resolve|check-traffic|clash|surge|loon)\b/, "keyword"],
+              [/\b(fetch-external|fetch-once|fetch|1yunti|flyingbird|include|exclude|emoji|replace|prefix|suffix|freeze|header|proxy|resolve|check-traffic|clash|surge|loon)\b/, "keyword"],
               [/\/([^\\\/]|\\.)+\//, "regexp"],
               [/"([^"\\]|\\.)*"/, "string"],
               [/\bhttps?:\/\/[^\s"]+/, "string.escape"],

@@ -123,6 +123,7 @@ func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	ctx := core.NewExecuteContext()
+	ctx.AllowExternalScript = allowExternalScript
 
 	if err := formula.Execute(ctx); err != nil {
 		fmt.Println("error occurred when running formula:", err)
@@ -231,12 +232,14 @@ var dir string
 var cacheDir string
 var port int
 var editorEnabled bool
+var allowExternalScript bool
 var password string
 
 func main() {
 	cwd, _ := os.Getwd()
 	flag.StringVar(&dir, "dir", cwd, "Directory to use as home directory for configuration files")
 	flag.StringVar(&cacheDir, "cache-dir", filepath.Join(os.TempDir(), "cache"), "Directory to use as cache directory for fetched data")
+	flag.BoolVar(&allowExternalScript, "allow-external-script", false, "Allow the fetch-external action to execute third-party commands")
 	flag.BoolVar(&editorEnabled, "editor", false, "Enable the browser editor")
 	flag.StringVar(&password, "password", "", "Password required to save formulas from the web editor")
 	flag.IntVar(&port, "port", 15725, "Port to run the HTTP server on")
@@ -245,6 +248,9 @@ func main() {
 	if editorEnabled && password == "" {
 		fmt.Fprintln(os.Stderr, "-password is required when -editor is enabled")
 		os.Exit(1)
+	}
+	if editorEnabled && allowExternalScript {
+		fmt.Fprintln(os.Stderr, "warning: enabling -allow-external-script together with -editor may allow user-submitted malicious rules to execute local commands; online editing is not recommended in this mode")
 	}
 
 	cache.HTTPCacheFolder = cacheDir

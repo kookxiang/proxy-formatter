@@ -1,15 +1,22 @@
 package core
 
 import (
+	"errors"
 	"net/http"
+	"proxy-provider/util"
+
+	"github.com/metacubex/mihomo/adapter/provider"
+	"github.com/metacubex/mihomo/common/convert"
+	"gopkg.in/yaml.v3"
 )
 
 type ExecuteContext struct {
-	items     []*ProxyItem
-	output    string
-	Proxy     string
-	ReqHeader http.Header
-	ResHeader http.Header
+	items               []*ProxyItem
+	output              string
+	Proxy               string
+	AllowExternalScript bool
+	ReqHeader           http.Header
+	ResHeader           http.Header
 }
 
 func NewExecuteContext() *ExecuteContext {
@@ -24,6 +31,35 @@ func NewExecuteContext() *ExecuteContext {
 
 func (ctx *ExecuteContext) RegisterProxy(proxy *ProxyItem) {
 	ctx.items = append(ctx.items, proxy)
+}
+
+func (ctx *ExecuteContext) RegisterProxiesFromBytes(body []byte) error {
+	schema := &provider.ProxySchema{}
+	if err := yaml.Unmarshal(body, schema); err != nil {
+		proxies, err := convert.ConvertsV2Ray(body)
+		if err != nil {
+			return err
+		}
+		schema.Proxies = proxies
+	}
+
+	for _, proxy := range schema.Proxies {
+		name, ok := proxy["name"].(string)
+		if !ok || name == "" {
+			return errors.New("proxy name is required in the schema")
+		}
+		option, err := util.ParseProxyOptions(proxy)
+		if err != nil {
+			return err
+		}
+		ctx.RegisterProxy(&ProxyItem{
+			Name:   name,
+			Type:   proxy["type"].(string),
+			Option: option,
+		})
+	}
+
+	return nil
 }
 
 func (ctx *ExecuteContext) FilterProxy(filter func(*ProxyItem) bool) {
