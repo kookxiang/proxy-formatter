@@ -115,9 +115,17 @@ func (s *FormulaScanner) ScanParams() string {
 		if char == '\n' {
 			return buf.String()
 		} else if char == '\\' {
-			escape = true
+			if escape {
+				buf.WriteByte('\\')
+				escape = false
+			} else {
+				escape = true
+			}
 		} else if escape {
 			escape = false
+			if char != '"' {
+				buf.WriteByte('\\')
+			}
 			buf.WriteByte(char)
 		} else if char == '"' && inQuote {
 			s.Next()
