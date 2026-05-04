@@ -3,6 +3,7 @@ package action
 import (
 	"errors"
 	"proxy-provider/core"
+	"regexp"
 	"strings"
 )
 
@@ -21,6 +22,17 @@ type ReplaceAction struct {
 }
 
 func (replace *ReplaceAction) Execute(ctx *core.ExecuteContext) error {
+	if strings.HasPrefix(replace.From, "/") && strings.HasSuffix(replace.From, "/") {
+		regex, err := regexp.Compile(replace.From[1 : len(replace.From)-1])
+		if err != nil {
+			return err
+		}
+		for _, proxy := range ctx.Proxies() {
+			proxy.Name = regex.ReplaceAllString(proxy.Name, replace.To)
+		}
+		return nil
+	}
+
 	for _, proxy := range ctx.Proxies() {
 		if strings.Contains(proxy.Name, replace.From) {
 			proxy.Name = strings.ReplaceAll(proxy.Name, replace.From, replace.To)

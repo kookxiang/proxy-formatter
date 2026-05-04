@@ -152,10 +152,16 @@ emoji
 
 把节点名称中的所有 `<from>` 替换成 `<to>`。
 
+模式规则：
+
+- 普通字符串：按字面量全文替换
+- `/.../`：按正则表达式替换，支持捕获组引用
+
 示例：
 
 ```text
 replace IEPL IPLC
+replace "/^(HK|JP) /" "$1 Premium "
 ```
 
 ### prefix <content>
