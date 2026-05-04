@@ -1,17 +1,15 @@
 package util
 
+import "reflect"
+
 func IsEmptyValue(val any) bool {
-	switch v := val.(type) {
-	case nil:
+	if val == nil {
 		return true
+	}
+
+	switch v := val.(type) {
 	case string:
 		return v == ""
-	case int, int8, int16, int32, int64:
-		return v == 0
-	case uint, uint8, uint16, uint32, uint64:
-		return v == 0
-	case float32, float64:
-		return v == 0
 	case bool:
 		return !v
 	case map[string]any:
@@ -25,6 +23,16 @@ func IsEmptyValue(val any) bool {
 	case []string:
 		return len(v) == 0
 	default:
-		return false
+		rv := reflect.ValueOf(val)
+		switch rv.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return rv.Int() == 0
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			return rv.Uint() == 0
+		case reflect.Float32, reflect.Float64:
+			return rv.Float() == 0
+		default:
+			return false
+		}
 	}
 }

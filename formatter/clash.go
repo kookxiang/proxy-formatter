@@ -40,6 +40,11 @@ func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
 		if config["ip-version"] == constant.DualStack {
 			delete(config, "ip-version")
 		}
+		if config["type"] == "hysteria2" {
+			if ports, ok := config["ports"].(string); ok && ports != "" {
+				delete(config, "port")
+			}
+		}
 		proxies = append(proxies, config)
 	}
 	var buffer bytes.Buffer
