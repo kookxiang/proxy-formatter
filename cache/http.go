@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"proxy-provider/core"
+	"sort"
 	"strings"
 	"time"
 )
@@ -18,7 +19,8 @@ import (
 var HTTPCacheFolder = "cache"
 
 func RequestWithCache(ctx *core.ExecuteContext, request *http.Request, preferCache bool) ([]byte, http.Header, error) {
-	body, header, needRefresh := getResponseCache(request.URL.String())
+	cacheKey := buildRequestCacheKey(request)
+	body, header, needRefresh := getResponseCache(cacheKey)
 	if len(body) == 0 || (needRefresh && !preferCache) {
 		var err error
 		body, header, err = requestWithoutCache(ctx, request)
@@ -27,7 +29,7 @@ func RequestWithCache(ctx *core.ExecuteContext, request *http.Request, preferCac
 		} else if err != nil {
 			return nil, nil, err
 		} else {
-			saveResponseCache(request.URL.String(), body, header)
+			saveResponseCache(cacheKey, body, header)
 		}
 	}
 
@@ -38,6 +40,33 @@ func RequestWithCache(ctx *core.ExecuteContext, request *http.Request, preferCac
 	}
 
 	return body, header, nil
+}
+
+func buildRequestCacheKey(request *http.Request) string {
+	var builder strings.Builder
+	builder.WriteString(request.Method)
+	builder.WriteByte('\n')
+	builder.WriteString(request.URL.String())
+	builder.WriteByte('\n')
+
+	headerKeys := make([]string, 0, len(request.Header))
+	for key := range request.Header {
+		headerKeys = append(headerKeys, key)
+	}
+	sort.Strings(headerKeys)
+
+	for _, key := range headerKeys {
+		values := append([]string(nil), request.Header.Values(key)...)
+		sort.Strings(values)
+		for _, value := range values {
+			builder.WriteString(http.CanonicalHeaderKey(key))
+			builder.WriteString(": ")
+			builder.WriteString(value)
+			builder.WriteByte('\n')
+		}
+	}
+
+	return builder.String()
 }
 
 func requestWithoutCache(ctx *core.ExecuteContext, request *http.Request) ([]byte, http.Header, error) {
@@ -68,9 +97,8 @@ func requestWithoutCache(ctx *core.ExecuteContext, request *http.Request) ([]byt
 	return body, response.Header, nil
 }
 
-func getResponseCache(url string) ([]byte, http.Header, bool) {
-	urlHash := sha256.Sum256([]byte(url))
-	localFilePath := filepath.Join(HTTPCacheFolder, hex.EncodeToString(urlHash[:]))
+func getResponseCache(cacheKey string) ([]byte, http.Header, bool) {
+	localFilePath := getResponseCachePath(cacheKey)
 	needRefresh := false
 	if stat, err := os.Stat(localFilePath); err != nil {
 		return nil, nil, false
@@ -113,9 +141,8 @@ func getResponseCache(url string) ([]byte, http.Header, bool) {
 	return body, header, needRefresh
 }
 
-func saveResponseCache(url string, body []byte, header http.Header) {
-	urlHash := sha256.Sum256([]byte(url))
-	localFilePath := filepath.Join(HTTPCacheFolder, hex.EncodeToString(urlHash[:]))
+func saveResponseCache(cacheKey string, body []byte, header http.Header) {
+	localFilePath := getResponseCachePath(cacheKey)
 	cacheFile, err := os.OpenFile(localFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		fmt.Println("failed to open cache file", localFilePath, ":", err)
@@ -129,4 +156,9 @@ func saveResponseCache(url string, body []byte, header http.Header) {
 	}
 	cacheFile.WriteString("\n")
 	cacheFile.Write(body)
+}
+
+func getResponseCachePath(cacheKey string) string {
+	keyHash := sha256.Sum256([]byte(cacheKey))
+	return filepath.Join(HTTPCacheFolder, hex.EncodeToString(keyHash[:]))
 }
