@@ -308,6 +308,7 @@
         <div class="actions">
           <select id="example-select" aria-label="选择示例">
             <option value="basic">基础示例</option>
+            <option value="blank">空白模板</option>
             <option value="traffic">流量检查</option>
             <option value="multi">多订阅拼接</option>
             <option value="extend">继承配置</option>
@@ -378,11 +379,11 @@
       const viewButton = document.getElementById("view-code");
 
       const examples = {
-        basic: `# 从远端获取原始订阅
-fetch https://example.com/proxies.yaml
-
-# 设置请求头
+        basic: `# 设置请求头
 header User-Agent "Clash.Meta"
+
+# 从远端获取原始订阅
+fetch https://example.com/proxies.yaml
 
 # 只保留日本节点
 include /日本/
@@ -393,22 +394,23 @@ prefix Tokyo
 # 输出为 Clash 格式
 clash
 `,
+        blank: ``,
         traffic: `fetch https://example.com/proxies.yaml
 check-traffic
-exclude /剩余流量|即将到期/
-emoji
-replace IEPL IPLC
-suffix Premium
 clash
 `,
-        multi: `fetch https://example.com/a.yaml
+        multi: `# 来自平台 A
+fetch https://example.com/a.yaml
 include /香港|日本/
 prefix A
 freeze
 
+# 来自平台 B
 fetch https://example.com/b.yaml
 include /新加坡|美国/
 prefix B
+
+# 合并后输出
 resolve 1.1.1.1
 surge 5
 `,
