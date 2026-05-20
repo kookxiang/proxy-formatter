@@ -11,12 +11,15 @@ import (
 )
 
 type ExecuteContext struct {
-	items               []*ProxyItem
-	output              string
-	Proxy               string
-	AllowExternalScript bool
-	ReqHeader           http.Header
-	ResHeader           http.Header
+	items                  []*ProxyItem
+	output                 string
+	Proxy                  string
+	AllowExternalScript    bool
+	OutputSuppressionDepth int
+	ExtendExecutionCount   int
+	FormulaLoader          func(name string) (*Formula, error)
+	ReqHeader              http.Header
+	ResHeader              http.Header
 }
 
 func NewExecuteContext() *ExecuteContext {

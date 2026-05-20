@@ -18,6 +18,9 @@ func init() {
 type LoonFormatter struct{}
 
 func (formatter *LoonFormatter) Execute(ctx *core.ExecuteContext) error {
+	if ctx.OutputSuppressionDepth > 0 {
+		return nil
+	}
 	ctx.ResHeader.Set("Content-Type", "text/plain; charset=utf-8")
 	for index, proxy := range ctx.AllProxies() {
 		if index > 0 {

@@ -32,6 +32,9 @@ type SingBoxFormatter struct {
 }
 
 func (formatter *SingBoxFormatter) Execute(ctx *core.ExecuteContext) error {
+	if ctx.OutputSuppressionDepth > 0 {
+		return nil
+	}
 	ctx.ResHeader.Set("Content-Type", "application/json; charset=utf-8")
 
 	outbounds := make([]map[string]any, 0, len(ctx.AllProxies()))

@@ -118,6 +118,35 @@ fetch-external "/usr/local/bin/subfetch" "--format=yaml"
 
 这个模式适合你希望手动控制刷新时机的场景。
 
+### extend <formula>
+
+继承并执行另一份配置，然后继续执行当前配置。
+
+说明：
+
+- `<formula>` 使用和访问配置文件相同的文件名规则：只支持字母、数字、下划线和短横线
+- 被继承配置会在同一个执行上下文里运行，因此抓取到的节点、过滤、改名、请求头、代理设置等都会保留
+- 被继承配置里的输出格式化器会被跳过，例如 `clash`、`surge`、`loon` 和 `sing-box` 不会写入最终响应
+- 每次请求最多允许执行 8 次 `extend`，超过后会报错，避免循环继承
+
+示例：
+
+```text
+# base
+fetch https://example.com/proxies.yaml
+exclude /过期|失效/
+emoji
+clash
+```
+
+```text
+# hk
+extend base
+include 香港
+prefix HK
+clash
+```
+
 ### include <pattern>
 
 只保留命中模式的节点名。

@@ -71,6 +71,24 @@ func resolveFormulaPath(name string) (string, error) {
 	return filepath.Join(dir, fileName), nil
 }
 
+func loadFormula(name string) (*core.Formula, error) {
+	filePath, err := resolveFormulaPath(name)
+	if err != nil {
+		return nil, err
+	}
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+	formula := &core.Formula{
+		Name: filepath.Base(filePath),
+	}
+	if err := formula.Parse(content); err != nil {
+		return nil, err
+	}
+	return formula, nil
+}
+
 func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -124,6 +142,7 @@ func formulaHandler(writer http.ResponseWriter, request *http.Request) {
 
 	ctx := core.NewExecuteContext()
 	ctx.AllowExternalScript = allowExternalScript
+	ctx.FormulaLoader = loadFormula
 
 	if err := formula.Execute(ctx); err != nil {
 		fmt.Println("error occurred when running formula:", err)

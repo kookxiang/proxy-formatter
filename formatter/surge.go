@@ -27,6 +27,9 @@ type SurgeFormatter struct {
 }
 
 func (formatter *SurgeFormatter) Execute(ctx *core.ExecuteContext) error {
+	if ctx.OutputSuppressionDepth > 0 {
+		return nil
+	}
 	ctx.ResHeader.Set("Content-Type", "text/plain; charset=utf-8")
 	ctx.Write("[Proxy]")
 	for _, proxy := range ctx.AllProxies() {

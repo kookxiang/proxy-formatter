@@ -18,6 +18,9 @@ func init() {
 type ClashFormatter struct{}
 
 func (formatter *ClashFormatter) Execute(ctx *core.ExecuteContext) error {
+	if ctx.OutputSuppressionDepth > 0 {
+		return nil
+	}
 	ctx.ResHeader.Set("Content-Type", "text/yaml; charset=utf-8")
 	proxies := make([]map[string]any, 0, len(ctx.AllProxies()))
 	for _, proxy := range ctx.AllProxies() {
