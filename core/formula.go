@@ -79,12 +79,14 @@ func (s *FormulaScanner) ScanAction() (Action, error) {
 		}
 		if char == '\n' && buf.Len() == 0 {
 			// ignore empty lines
+			isLeadingSpaces = true
 			continue
 		} else if char == '\n' {
 			params = append(params, buf.String())
 			return CreateAction(params)
 		} else if char == '#' && buf.Len() == 0 {
 			s.ScanLineComment()
+			isLeadingSpaces = true
 			continue
 		} else if char == ' ' {
 			params = append(params, buf.String())

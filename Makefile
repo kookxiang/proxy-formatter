@@ -5,6 +5,9 @@ SYSTEMD_DIR := /usr/lib/systemd/system
 
 build: bin geosite
 
+test:
+	go test ./...
+
 bin:
 	go build -trimpath -o proxy-formatter -v .
 
@@ -26,4 +29,4 @@ uninstall:
 clean:
 	rm -f proxy-formatter
 
-.PHONY: build bin geosite install uninstall clean
+.PHONY: build test bin geosite install uninstall clean
