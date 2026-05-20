@@ -52,6 +52,9 @@ func (action *FetchAction) Execute(ctx *core.ExecuteContext) error {
 	}
 
 	ctx.ResHeader = header.Clone()
+	if ctx.ResHeader == nil {
+		ctx.ResHeader = http.Header{}
+	}
 	if action.Once {
 		ctx.ResHeader.Del(core.HeaderSubscriptionUserinfo)
 	}
