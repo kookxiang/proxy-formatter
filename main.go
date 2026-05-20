@@ -1,33 +1,31 @@
 package main
 
 import (
-	"crypto/rand"
 	_ "embed"
-	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
-	"proxy-provider/cache"
-	"proxy-provider/core"
-	"proxy-provider/geosite"
-	"proxy-provider/util"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
+
 	_ "proxy-provider/action"
+	"proxy-provider/cache"
+	"proxy-provider/core"
 	_ "proxy-provider/formatter"
+	"proxy-provider/geosite"
+	"proxy-provider/util"
 )
 
 //go:embed public/index.html
 var newPageHTML []byte
 
 const editorComment = "# Created by WebUI Editor"
-
-const fileTokenBytes = 48
 
 var formulaFileNamePattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
@@ -56,11 +54,11 @@ func readEditorFormula(content []byte) (string, bool) {
 }
 
 func newRandomFileToken() (string, error) {
-	token := make([]byte, fileTokenBytes)
-	if _, err := rand.Read(token); err != nil {
+	id, err := uuid.NewV4()
+	if err != nil {
 		return "", err
 	}
-	return base64.RawURLEncoding.EncodeToString(token), nil
+	return id.String(), nil
 }
 
 func resolveFormulaPath(name string) (string, error) {

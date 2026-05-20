@@ -3,6 +3,7 @@ module proxy-provider
 go 1.25.0
 
 require (
+	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/metacubex/geo v0.0.0-20240718103914-a4db326ccfd7
 	github.com/metacubex/mihomo v1.19.24
 	gopkg.in/yaml.v3 v3.0.1
@@ -26,7 +27,6 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
-	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
